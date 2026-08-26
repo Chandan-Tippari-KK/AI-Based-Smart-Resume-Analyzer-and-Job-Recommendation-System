@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Based Smart Resume Analyzer</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <div class="header">
+
+            <h1>🤖 AI-Based Smart Resume Analyzer</h1>
+
+            <p>
+                Upload your resume and receive AI-powered career insights,
+                ATS score, job recommendations, interview questions,
+                resume improvements, and career guidance.
+            </p>
+
+        </div>
+
+        <form action="/" method="POST" enctype="multipart/form-data">
+
+            <label><b>Select Resume (PDF/DOCX)</b></label>
+
+            <br><br>
+
+            <input
+                type="file"
+                name="resume"
+                accept=".pdf,.docx"
+                required>
+
+            <br><br>
+
+            <div class="button-group">
+
+                <button type="submit">
+                    Analyze Resume
+                </button>
+
+                <a href="{{ url_for('clear') }}" class="btn">
+                    Clear Results
+                </a>
+
+                {% if uploaded_file_name %}
+                <a href="{{ url_for('download_report') }}" class="btn">
+                    Download PDF Report
+                </a>
+                {% endif %}
+
+            </div>
+
+        </form>
+
+        {% if uploaded_file_name %}
+
+        <div class="success-box">
+
+            <h3>Resume Uploaded Successfully ✔</h3>
+
+            <p>
+                <strong>File Name:</strong>
+                {{ uploaded_file_name }}
+            </p>
+
+        </div>
+
+        {% endif %}
+
+        {% if resume_score %}
+
+        <div class="dashboard">
+
+            <div class="card">
+                <h3>Resume Score</h3>
+                <h1>{{ resume_score["Overall Score"] }}</h1>
+            </div>
+
+            <div class="card">
+                <h3>ATS Score</h3>
+                <h1>{{ ats_score["ATS Score"] }}</h1>
+        </div>
+
+            <div class="card">
+                <h3>Skills</h3>
+                <h1>{{ skills|length }}</h1>
+            </div>
+
+            <div class="card">
+                <h3>Job Roles</h3>
+                <h1>{{ ml_jobs|length }}</h1>
+            </div>
+
+        </div>
+
+        {% endif %}
+
+        <hr>
+
+        <h2>Resume Ranking</h2>
+
+        {% if resume_rank %}
+
+        <div class="rank-card">
+
+            <h1>{{ resume_rank["Rank"] }}</h1>
+
+            <h3>{{ resume_rank["Message"] }}</h3>
+
+        </div>
+
+        {% else %}
+
+        <p>Upload a resume to view ranking.</p>
+
+        {% endif %}
+
+        <hr>
+
+        <h2>Skill Categories</h2>
+
+        {% if categorized_skills %}
+
+            {% for category, skills in categorized_skills.items() %}
+
+                <h3>{{ category }}</h3>
+
+                <div class="skill-container">
+
+                {% for skill in skills %}
+
+                <span class="skill-badge">
+                    {{ skill }}
+                </span>
+
+                {% endfor %}
+
+                </div>
+
+            {% endfor %}
+
+        {% else %}
+
+        <p>Upload a resume to view categorized skills.</p>
+
+        {% endif %}
+
+        <hr>
+
+        <h2>Top Recommended Job Roles</h2>
+
+        {% if ml_jobs %}
+
+        <ol>
+
+        {% for job, score in ml_jobs.items() %}
+
+        <li>{{ job }}</li>
+
+        {% endfor %}
+
+        </ol>
+
+        {% else %}
+
+        <p>Upload a resume to view recommended job roles.</p>
+
+        {% endif %}
+
+        <hr>
+
+        <h2>Machine Learning Match Scores</h2>
+
+        {% if ml_jobs %}
+
+        <table border="1" cellpadding="8">
+
+        <tr>
+            <th>Job Role</th>
+            <th>Match %</th>
+        </tr>
+
+        {% for job, score in ml_jobs.items() %}
+
+        <tr>
+            <td>{{ job }}</td>
+            <td>{{ score }}%</td>
+        </tr>
+
+        {% endfor %}
+
+        </table>
+
+        {% else %}
+
+        <p>Upload a resume to view ML job matching.</p>
+
+        {% endif %}
+
+        <hr>
+
+        <h2>Resume Score</h2>
+
+        {% if resume_score %}
+
+        <div class="score-section">
+
+            <p><b>Overall Score</b> ({{ resume_score["Overall Score"] }})</p>
+
+            <progress value="{{ resume_score['Overall Score'] }}" max="100"></progress>
+
+            <p><b>Skill Score</b> ({{ resume_score["Skill Score"] }})</p>
+
+            <progress value="{{ resume_score['Skill Score'] }}" max="100"></progress>
+
+            <p><b>Experience Score</b> ({{ resume_score["Experience Score"] }})</p>
+
+            <progress value="{{ resume_score['Experience Score'] }}" max="100"></progress>
+
+            <p><b>Education Score</b> ({{ resume_score["Education Score"] }})</p>
+
+            <progress value="{{ resume_score['Education Score'] }}" max="100"></progress>
+
+            <p><b>Project Score</b> ({{ resume_score["Project Score"] }})</p>
+
+            <progress value="{{ resume_score['Project Score'] }}" max="100"></progress>
+
+            <p><b>Certification Score</b> ({{ resume_score["Certification Score"] }})</p>
+
+            <progress value="{{ resume_score['Certification Score'] }}" max="100"></progress>
+
+        </div>
+
+        {% else %}
+
+        <p>Upload a resume to calculate the Resume Score.</p>
+
+        {% endif %}
+
+        <hr>
+
+        <h2>ATS Score</h2>
+
+        {% if ats_score %}
+
+        <h3>{{ ats_score["ATS Score"] }}/100</h3>
+
+        <progress
+            value="{{ ats_score['ATS Score'] }}"
+            max="100"
+            style="width:100%;height:30px;">
+        </progress>
+
+        <h3>Missing Sections</h3>
+
+        <ul>
+
+        {% for item in ats_score["Missing"] %}
+
+        <li>{{ item }}</li>
+
+        {% endfor %}
+
+        </ul>
+
+        {% else %}
+
+        <p>Upload a resume to calculate ATS Score.</p>
+
+        {% endif %}
+
+        <hr>
+
+        <h2>Resume Improvement Suggestions</h2>
+
+        {% if suggestions %}
+
+        <ul>
+
+        {% for suggestion in suggestions %}
+
+        <li>{{ suggestion }}</li>
+
+        {% endfor %}
+
+        </ul>
+
+        {% else %}
+
+        <p>Upload a resume to view suggestions.</p>
+
+        {% endif %}
+
+        <hr>
+
+        <h2>Interview Questions</h2>
+
+        {% if interview_questions %}
+
+        <ol>
+
+        {% for question in interview_questions %}
+
+        <li>{{ question }}</li>
+
+        {% endfor %}
+
+        </ol>
+
+        {% else %}
+
+        <p>Upload a resume to generate interview questions.</p>
+
+        {% endif %}
+
+        <hr>
+
+        <h2>AI Resume Rewriter</h2>
+
+        {% if rewritten_resume %}
+
+        <pre style="white-space: pre-wrap;">
+        {{ rewritten_resume }}
+        </pre>
+
+        {% else %}
+
+        <p>Upload a resume to view the rewritten version.</p>
+
+        {% endif %}
+
+        <hr>
+
+        <h2>Career Recommendation</h2>
+
+        {% if career_recommendation %}
+
+        <h3>Recommended Career</h3>
+
+        <p>
+        {{ career_recommendation["Career"] }}
+        </p>
+
+        <h3>Missing Skills</h3>
+
+        <ul>
+
+        {% for skill in career_recommendation["Missing Skills"] %}
+
+        <li>{{ skill }}</li>
+
+        {% endfor %}
+
+        </ul>
+
+        <h3>Recommended Certifications</h3>
+
+        <ul>
+
+        {% for cert in career_recommendation["Certifications"] %}
+
+        <li>{{ cert }}</li>
+
+        {% endfor %}
+
+        </ul>
+
+        <h3>Learning Platforms</h3>
+
+        <ul>
+
+        {% for platform in career_recommendation["Learning Platforms"] %}
+
+        <li>{{ platform }}</li>
+
+        {% endfor %}
+
+        </ul>
+
+        <h3>Expected Salary</h3>
+
+        <p>
+
+        {{ career_recommendation["Salary"] }}
+
+        </p>
+
+        {% else %}
+
+        <p>Upload a resume to get career recommendations.</p>
+
+        {% endif %}
+
+        <hr>
+
+        <h2>Career Roadmap</h2>
+
+        {% if career_roadmap %}
+
+        <h3>Target Career</h3>
+            <p>{{ career_roadmap["Career"] }}</p>
+
+        <h3>Skills to Learn</h3>
+
+        <ul>
+        {% for skill in career_roadmap["Missing Skills"] %}
+        <li>{{ skill }}</li>
+        {% endfor %}
+        </ul>
+
+        <h3>Recommended Certifications</h3>
+
+        <ul>
+        {% for cert in career_roadmap["Certifications"] %}
+        <li>{{ cert }}</li>
+        {% endfor %}
+        </ul>
+
+        <h3>Learning Platforms</h3>
+
+        <ul>
+        {% for platform in career_roadmap["Learning Platforms"] %}
+        <li>{{ platform }}</li>
+        {% endfor %}
+        </ul>
+
+        <h3>Expected Salary</h3>
+
+        <p>{{ career_roadmap["Salary"] }}</p>
+
+        <h3>Estimated Learning Duration</h3>
+
+        <p>{{ career_roadmap["Duration"] }}</p>
+
+        {% else %}
+
+        <p>Upload a resume to generate a career roadmap.</p>
+
+        {% endif %}
+
+        <hr>
+
+        <h2>Skill Gap Analysis</h2>
+
+        {% if skill_gap %}
+
+        <h3>Skill Completion</h3>
+
+        <progress
+            value="{{ skill_gap['Completion'] }}"
+            max="100">
+        </progress>
+
+        <p>
+        <b>{{ skill_gap["Completion"] }}% Completed</b>
+        </p>
+
+        <h3>Skills You Already Have</h3>
+
+        <div class="skill-container">
+
+        {% for skill in skill_gap["Existing"] %}
+
+        <span class="skill-badge">
+        {{ skill }}
+        </span>
+
+        {% endfor %}
+
+        </div>
+
+        <h3>Missing Skills</h3>
+
+        <div class="skill-container">
+
+        {% for skill in skill_gap["Missing"] %}
+
+        <span class="missing-badge">
+        {{ skill }}
+        </span>
+
+        {% endfor %}
+
+        </div>
+
+        {% else %}
+
+        <p>Upload a resume to view the skill gap analysis.</p>
+
+        {% endif %}
+
+        <hr>
+
+        <h2>Learning Path</h2>
+
+        {% if learning_path %}
+
+        <ol>
+
+        {% for step in learning_path %}
+
+        <li>{{ step }}</li>
+
+        {% endfor %}
+
+        </ol>
+
+        {% else %}
+
+        <p>Upload a resume to generate a personalized learning path.</p>
+
+        {% endif %}
+
+        <hr>
+
+        <h2>Resume Strength & Weakness Analysis</h2>
+
+        {% if strength_analysis %}
+
+        <h3>✅ Strengths</h3>
+
+        <ul>
+
+        {% for item in strength_analysis["Strengths"] %}
+
+        <li>{{ item }}</li>
+
+        {% endfor %}
+
+        </ul>
+
+        <h3>⚠ Weaknesses</h3>
+
+        <ul>
+
+        {% for item in strength_analysis["Weaknesses"] %}
+
+        <li>{{ item }}</li>
+
+        {% endfor %}
+
+        </ul>
+
+        {% else %}
+
+        <p>Upload a resume to analyze strengths and weaknesses.</p>
+
+        {% endif %}
+
+    </div>
+
+</body>
+</html>
