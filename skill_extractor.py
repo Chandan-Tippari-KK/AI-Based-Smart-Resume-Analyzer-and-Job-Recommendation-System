@@ -1,7 +1,8 @@
-# List of predefined skills
 
+import re
+
+# List of predefined technical skills
 SKILLS_DATABASE = [
-
     "Python",
     "Java",
     "C#",
@@ -35,19 +36,30 @@ SKILLS_DATABASE = [
     "AI Automation",
     "Agentic AI",
     "LLM",
-    "Machine Learning"
+    "Machine Learning",
 ]
 
 
+def skill_pattern(skill):
+    """Build a case-insensitive pattern for a complete skill name."""
+    escaped_skill = re.escape(skill)
+    escaped_skill = escaped_skill.replace(r"\ ", r"\s+")
+
+    return re.compile(
+        rf"(?<![A-Za-z0-9_]){escaped_skill}(?![A-Za-z0-9_])",
+        re.IGNORECASE,
+    )
+
+
 def extract_skills(resume_text):
+    """Extract predefined skills without matching partial words."""
+    if not isinstance(resume_text, str) or not resume_text.strip():
+        return []
 
     found_skills = []
 
-    resume_text_lower = resume_text.lower()
-
     for skill in SKILLS_DATABASE:
-
-        if skill.lower() in resume_text_lower:
+        if skill_pattern(skill).search(resume_text):
             found_skills.append(skill)
 
     return found_skills

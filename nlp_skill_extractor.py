@@ -1,8 +1,5 @@
-import spacy
 
-# Load the English NLP model
-nlp = spacy.load("en_core_web_sm")
-
+import re
 
 # List of technical skills
 SKILLS = [
@@ -39,32 +36,33 @@ SKILLS = [
     "CrewAI",
     "AI Automation",
     "Agentic AI",
-    "LLM"
+    "LLM",
 ]
+
+
+def skill_pattern(skill):
+    """Match a complete skill name, ignoring capitalization."""
+    escaped_skill = re.escape(skill)
+    escaped_skill = escaped_skill.replace(r"\ ", r"\s+")
+
+    return re.compile(
+        rf"(?<![A-Za-z0-9_]){escaped_skill}(?![A-Za-z0-9_])",
+        re.IGNORECASE,
+    )
 
 
 def extract_skills_nlp(resume_text):
     """
-    Extracts skills using token-based NLP matching.
+    Extract technical skills using case-insensitive,
+    complete-term matching.
     """
-
-    doc = nlp(resume_text)
-
-    # Convert the resume into lowercase tokens
-    tokens = {token.text.lower() for token in doc}
+    if not isinstance(resume_text, str) or not resume_text.strip():
+        return []
 
     detected_skills = []
 
     for skill in SKILLS:
-
-        # Single-word skills
-        if " " not in skill:
-            if skill.lower() in tokens:
-                detected_skills.append(skill)
-
-        # Multi-word skills
-        else:
-            if skill.lower() in resume_text.lower():
-                detected_skills.append(skill)
+        if skill_pattern(skill).search(resume_text):
+            detected_skills.append(skill)
 
     return detected_skills
